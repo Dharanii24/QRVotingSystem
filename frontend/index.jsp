@@ -1,28 +1,21 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html>
 <head>
-    <title>QR Voting System - Login/Register</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>QR Voting Login</title>
 </head>
 <body>
-    <h1>QR Voting System</h1>
-
-    <!-- Registration -->
-    <h2>Register</h2>
-    <input type="text" id="regName" placeholder="Name">
-    <input type="email" id="regEmail" placeholder="Email">
-    <input type="password" id="regPassword" placeholder="Password">
-    <button onclick="registerUser()">Register</button>
-
-    <hr>
-
-    <!-- Login -->
     <h2>Login</h2>
-    <input type="email" id="loginEmail" placeholder="Email">
-    <input type="password" id="loginPassword" placeholder="Password">
-    <button onclick="loginUser()">Login</button>
+    <input id="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+    <button id="loginBtn">Login</button>
 
+    <!-- Include your JS file -->
     <script src="js/ajaxCalls.js"></script>
+    <script>
+        // Make sure login function exists and bind it to the button
+        document.getElementById("loginBtn").addEventListener("click", login);
+    </script>
 </body>
+</html>
+
 </html>

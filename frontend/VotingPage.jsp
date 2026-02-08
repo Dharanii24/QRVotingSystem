@@ -1,31 +1,30 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html>
 <head>
     <title>Voting Page</title>
-    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<h1>Welcome, <span id="userName"></span></h1>
+    <h1>Welcome, <span id="name"></span></h1>
+    <img id="qr" width="200" alt="Your QR Code">
 
-<h2>Your QR Code</h2>
-<img id="qrImage" src="" alt="Your QR Code" width="200">
+    <h2>Candidates</h2>
+    <div id="candidates"></div>
 
-<h2>Vote for a Candidate</h2>
-<div id="candidates"></div>
+    <button id="viewResultsBtn">View Results</button>
+    <div id="results"></div>
 
-<h2>Voting Results</h2>
-<button onclick="viewResults()">View Results</button>
-<div id="results"></div>
+    <!-- Include your JS file -->
+    <script src="js/ajaxCalls.js"></script>
+    <script>
+        // Load user info
+        document.getElementById("name").innerText = sessionStorage.getItem("name") || "Voter";
+        document.getElementById("qr").src = sessionStorage.getItem("qr") || "";
 
-<script src="js/ajaxCalls.js"></script>
-<script>
-    // Display user name and QR code from sessionStorage
-    document.getElementById('userName').innerText = sessionStorage.getItem('name');
-    document.getElementById('qrImage').src = sessionStorage.getItem('qrCode');
+        // Load candidates from backend
+        loadCandidates();
 
-    // Load candidates dynamically
-    loadCandidates();
-</script>
+        // View results button
+        document.getElementById("viewResultsBtn").addEventListener("click", viewResults);
+    </script>
 </body>
 </html>

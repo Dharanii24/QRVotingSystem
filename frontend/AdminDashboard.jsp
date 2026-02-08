@@ -3,25 +3,45 @@
 <html>
 <head>
     <title>Admin Dashboard</title>
-    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<h1>Admin Dashboard</h1>
+    <h1>Admin Dashboard</h1>
 
-<h2>Add Candidate</h2>
-<input type="text" id="candName" placeholder="Candidate Name">
-<input type="text" id="candParty" placeholder="Party">
-<input type="text" id="candDesc" placeholder="Description">
-<button onclick="addCandidate()">Add Candidate</button>
+    <h3>Add Candidate</h3>
+    <input type="text" id="candidateName" placeholder="Name">
+    <input type="text" id="candidateParty" placeholder="Party">
+    <input type="text" id="candidateDescription" placeholder="Description">
+    <button onclick="submitCandidate()">Add Candidate</button>
 
-<h2>Remove Candidate</h2>
-<input type="number" id="candIdRemove" placeholder="Candidate ID">
-<button onclick="removeCandidate()">Remove Candidate</button>
+    <h3>Vote Results</h3>
+    <button onclick="viewResults()">Refresh Results</button>
+    <div id="results"></div>
 
-<h2>Vote Results</h2>
-<button onclick="viewResults()">View Votes</button>
-<div id="voteResults"></div>
+    <script src="js/ajaxCalls.js"></script>
+    <script>
+        // Check admin login
+        const token = sessionStorage.getItem("token");
+        if (!token) {
+            alert("Please login as admin!");
+            window.location.href = "index.jsp";
+        }
 
-<script src="js/ajaxCalls.js"></script>
+        // Function to submit candidate
+        function submitCandidate() {
+            const name = document.getElementById("candidateName").value;
+            const party = document.getElementById("candidateParty").value;
+            const description = document.getElementById("candidateDescription").value;
+
+            if (!name || !party) {
+                alert("Name and Party are required!");
+                return;
+            }
+
+            addCandidate(name, party, description);
+        }
+
+        // Load results automatically
+        viewResults();
+    </script>
 </body>
 </html>
