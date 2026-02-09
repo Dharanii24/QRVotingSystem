@@ -1,17 +1,25 @@
-const db = require('../config/db');
+const Candidate = require("../models/Candidate");
 
-// Get all candidates
 exports.getCandidates = (req, res) => {
-    db.query("SELECT * FROM Candidates", (err, results) => {
-        if (err) return res.status(500).json({ message: err.message });
+    Candidate.getAll((err, results) => {
+        if (err) return res.status(500).json({ message: "DB error" });
         res.json(results);
     });
 };
 
-// Get voting results
-exports.getResults = (req, res) => {
-    db.query("SELECT name, party, votes_count FROM Candidates", (err, results) => {
-        if (err) return res.status(500).json({ message: err.message });
+exports.addCandidate = (req, res) => {
+    const { name, party } = req.body;
+    if (!name || !party) return res.status(400).json({ message: "All fields required" });
+
+    Candidate.add(name, party, (err) => {
+        if (err) return res.status(500).json({ message: "DB error" });
+        res.json({ message: "Candidate added successfully" });
+    });
+};
+
+exports.viewResults = (req, res) => {
+    Candidate.getAll((err, results) => {
+        if (err) return res.status(500).json({ message: "DB error" });
         res.json(results);
     });
 };

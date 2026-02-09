@@ -1,9 +1,9 @@
-const express = require('express');
+const express = require("express");
+const { getCandidates, addCandidate, viewResults } = require("../controllers/adminController");
 const router = express.Router();
-const { getCandidates, getResults } = require('../controllers/adminController');
-const verifyToken = require('../middleware/authMiddleware');
 
-router.get('/candidates', verifyToken, getCandidates);
-router.get('/results', verifyToken, getResults);
+router.get("/candidates", getCandidates);
+router.post("/add", addCandidate);
+router.get("/results", viewResults);
 
 module.exports = router;

@@ -1,40 +1,5 @@
 const API = "http://localhost:5000/api";
 
-// ================== LOGIN ==================
-async function login() {
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
-
-    if (!email || !password) {
-        alert("Please enter email and password");
-        return;
-    }
-
-    try {
-        const res = await fetch(`${API}/auth/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password })
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-            alert(data.message || "Login failed");
-            return;
-        }
-
-        sessionStorage.setItem("token", data.token);
-        sessionStorage.setItem("name", data.name);
-        sessionStorage.setItem("qr", data.qr);
-
-        window.location.href = "VotingPage.jsp";
-    } catch (err) {
-        console.error(err);
-        alert("Login request failed");
-    }
-}
-
 // ================== LOAD CANDIDATES ==================
 async function loadCandidates() {
     try {
@@ -72,7 +37,7 @@ async function vote(candidateId) {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": token
+                "Authorization": `Bearer ${token}` // ✅ send token
             },
             body: JSON.stringify({ candidateId })
         });
@@ -81,7 +46,7 @@ async function vote(candidateId) {
         if (!res.ok) throw new Error(data.message || "Vote failed");
 
         alert(data.message);
-        // Optionally reload results
+        viewResults(); // reload results
     } catch (err) {
         console.error(err);
         alert(err.message);

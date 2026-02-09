@@ -1,29 +1,34 @@
-const db = require('../config/db');
-const User = require('../models/User');
+const db = require("../config/db");
+const jwt = require("jsonwebtoken");
 
-exports.castVote = (req, res) => {
-    const { candidateId } = req.body;
-    const userId = req.userId; // from authMiddleware
+exports.vote = (req, res) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ message: "No token provided" });
 
-    // 1️⃣ Check if user has already voted
-    db.query("SELECT has_voted FROM Users WHERE id=?", [userId], (err, results) => {
-        if (err) return res.status(500).json({ message: err.message });
-        if (!results[0]) return res.status(404).json({ message: "User not found" });
-        if (results[0].has_voted) return res.status(400).json({ message: "You have already voted" });
+    const token = authHeader.split(" ")[1];
+    if (!token) return res.status(401).json({ message: "Invalid token" });
 
-        // 2️⃣ Record vote
-        db.query("INSERT INTO Votes (user_id, candidate_id) VALUES (?,?)", [userId, candidateId], (err2) => {
-            if (err2) return res.status(500).json({ message: err2.message });
+    let decoded;
+    try { decoded = jwt.verify(token, process.env.JWT_SECRET); }
+    catch { return res.status(401).json({ message: "Invalid token" }); }
 
-            // 3️⃣ Mark user as voted
-            User.markVoted(userId, (err3) => {
-                if (err3) return res.status(500).json({ message: err3.message });
+    const email = decoded.email;
+    const candidateId = req.body.candidateId;
+    if (!candidateId) return res.status(400).json({ message: "Candidate ID required" });
 
-                // 4️⃣ Increment candidate vote count
-                db.query("UPDATE Candidates SET votes_count = votes_count + 1 WHERE id=?", [candidateId], (err4) => {
-                    if (err4) return res.status(500).json({ message: err4.message });
-                    res.json({ message: "Vote cast successfully" });
-                });
+    db.query("SELECT * FROM Users WHERE email=?", [email], (err, users) => {
+        if (err) return res.status(500).json({ message: "DB error" });
+        if (!users.length) return res.status(404).json({ message: "Voter not found" });
+
+        const voter = users[0];
+        if (voter.has_voted) return res.status(400).json({ message: "Already voted" });
+
+        db.query("UPDATE Candidates SET votes_count = votes_count + 1 WHERE id=?", [candidateId], (err2) => {
+            if (err2) return res.status(500).json({ message: "DB error" });
+
+            db.query("UPDATE Users SET has_voted=TRUE WHERE email=?", [email], (err3) => {
+                if (err3) return res.status(500).json({ message: "DB error" });
+                res.json({ message: "Vote successfully cast!" });
             });
         });
     });

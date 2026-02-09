@@ -1,24 +1,13 @@
 const db = require("../config/db");
 
-// Get all candidates
-exports.getAllCandidates = () => {
-    return new Promise((resolve, reject) => {
-        db.query("SELECT * FROM Candidates", (err, results) => {
-            if (err) reject(err);
-            else resolve(results);
-        });
-    });
+exports.getAll = cb => {
+    db.query("SELECT * FROM Candidates", cb);
 };
 
-// Get voting results
-exports.getResults = () => {
-    return new Promise((resolve, reject) => {
-        db.query(
-            "SELECT name, party, votes_count FROM Candidates",
-            (err, results) => {
-                if (err) reject(err);
-                else resolve(results);
-            }
-        );
-    });
+exports.add = (name, party, cb) => {
+    db.query("INSERT INTO Candidates (name, party) VALUES (?,?)", [name, party], cb);
+};
+
+exports.incrementVote = (id, cb) => {
+    db.query("UPDATE Candidates SET votes_count = votes_count + 1 WHERE id=?", [id], cb);
 };

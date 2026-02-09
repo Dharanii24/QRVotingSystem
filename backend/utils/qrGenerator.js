@@ -2,19 +2,13 @@ const QRCode = require("qrcode");
 const path = require("path");
 const fs = require("fs");
 
-const generateQR = async (text, filename) => {
+module.exports = async function generateQR(text) {
     const uploadDir = path.join(__dirname, "../uploads");
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
 
-    // create uploads folder if missing
-    if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir);
-    }
-
+    const filename = `qr_${Date.now()}.png`;
     const filePath = path.join(uploadDir, filename);
+
     await QRCode.toFile(filePath, text);
-
-    // Return path relative to server root
-    return `/uploads/${filename}`;
+    return `/uploads/${filename}`; // return relative path
 };
-
-module.exports = generateQR;
