@@ -2,29 +2,32 @@
 <html>
 <head>
     <title>Voting Page</title>
+        <script>
+document.addEventListener("DOMContentLoaded", function () {
+    const name = localStorage.getItem("name");
+    const qr = localStorage.getItem("qr");
+
+    document.getElementById("welcome").innerText = "Welcome, " + name;
+    document.getElementById("qrImg").src = "http://localhost:5000" + qr;
+});
+</script>
+
 </head>
 <body>
-    <h1>Welcome, <span id="name"></span></h1>
-    <img id="qr" width="200" alt="Your QR Code">
 
-    <h2>Candidates</h2>
-    <div id="candidates"></div>
+    <h2 id="welcome"></h2>
 
-    <button id="viewResultsBtn">View Results</button>
-    <div id="results"></div>
+    <img id="qrImg" width="200" />
 
-    <!-- Include your JS file -->
-    <script src="js/ajaxCalls.js"></script>
-    <script>
-        // Load user info
-        document.getElementById("name").innerText = sessionStorage.getItem("name") || "Voter";
-        document.getElementById("qr").src = sessionStorage.getItem("qr") || "";
+    <!-- SCRIPT MUST BE AT BOTTOM -->
+    <!-- <script>
+        const token = localStorage.getItem("token");
+        const qr = localStorage.getItem("qr");
+        const name = localStorage.getItem("name");
 
-        // Load candidates from backend
-        loadCandidates();
+        document.getElementById("welcome").innerText = "Welcome, " + name;
+        document.getElementById("qrImg").src = "http://localhost:5000" + qr;
+    </script> -->
 
-        // View results button
-        document.getElementById("viewResultsBtn").addEventListener("click", viewResults);
-    </script>
 </body>
 </html>

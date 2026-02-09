@@ -1,9 +1,7 @@
-const express = require("express");
-const { getCandidates, addCandidate, viewResults } = require("../controllers/adminController");
-const router = express.Router();
-
-router.get("/candidates", getCandidates);
-router.post("/add", addCandidate);
-router.get("/results", viewResults);
-
+// adminRoutes.js
+const router = require("express").Router();
+const c = require("../controllers/adminController");
+router.get("/candidates", c.getCandidates);
+router.post("/add", c.addCandidate);
+router.get("/results", c.results);
 module.exports = router;

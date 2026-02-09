@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin QR Scan</title>
+
+    <!-- QR Scanner Library -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+            padding: 20px;
+        }
+        #reader {
+            width: 300px;
+            margin: auto;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+            color: green;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Admin – Scan Voter QR</h2>
+
+<div id="reader"></div>
+<div id="result"></div>
+
+<script>
+const resultDiv = document.getElementById("result");
+
+function onScanSuccess(decodedText) {
+    console.log("QR Data:", decodedText);
+
+    // Example QR content: VOTER:user@email.com
+    fetch("http://10.188.132.208:5000/api/voter/scan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ qrData: decodedText })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) {
+            resultDiv.style.color = "red";
+            resultDiv.innerText = data.error;
+        } else {
+            resultDiv.style.color = "green";
+            resultDiv.innerText = "Valid voter ✔ Redirecting to vote page...";
+
+            // Redirect to voting page
+            setTimeout(() => {
+                window.location.href = "vote.html";
+            }, 2000);
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        resultDiv.style.color = "red";
+        resultDiv.innerText = "Server error";
+    });
+}
+
+// Start camera
+new Html5Qrcode("reader").start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: 250 },
+    onScanSuccess
+);
+</script>
+
+</body>
+</html>
