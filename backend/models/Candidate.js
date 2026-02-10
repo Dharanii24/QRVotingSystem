@@ -16,15 +16,15 @@ const db = require('../config/db');
 
 class Candidate {
   static async create(candidateData) {
-    const { candidate_id, full_name, party, position, bio, photo_path } = candidateData;
-    const sql = `INSERT INTO candidates (candidate_id, full_name, party, position, bio, photo_path) 
+    const { candidate_id, name, party, position, bio, photo_path } = candidateData;
+    const sql = `INSERT INTO candidates (candidate_id, name, party, position, bio, photo_path) 
                  VALUES (?, ?, ?, ?, ?, ?)`;
-    const [result] = await db.query(sql, [candidate_id, full_name, party, position, bio, photo_path]);
+    const [result] = await db.query(sql, [candidate_id, name, party, position, bio, photo_path]);
     return result;
   }
 
   static async findAll() {
-    const sql = `SELECT * FROM candidates WHERE is_active = TRUE ORDER BY position, full_name`;
+    const sql = `SELECT * FROM candidates WHERE is_active = TRUE ORDER BY position, name`;
     const [rows] = await db.query(sql);
     return rows;
   }
@@ -36,12 +36,12 @@ class Candidate {
   }
 
   static async update(candidate_id, updateData) {
-    const { full_name, party, position, bio, photo_path, is_active } = updateData;
+    const { name, party, position, bio, photo_path, is_active } = updateData;
     const sql = `UPDATE candidates SET 
-                 full_name = ?, party = ?, position = ?, bio = ?, 
+                 name = ?, party = ?, position = ?, bio = ?, 
                  photo_path = ?, is_active = ? 
                  WHERE candidate_id = ?`;
-    const [result] = await db.query(sql, [full_name, party, position, bio, photo_path, is_active, candidate_id]);
+    const [result] = await db.query(sql, [name, party, position, bio, photo_path, is_active, candidate_id]);
     return result;
   }
 
@@ -62,7 +62,7 @@ class Candidate {
       SELECT 
         position,
         candidate_id,
-        full_name,
+        name,
         party,
         vote_count,
         photo_path,

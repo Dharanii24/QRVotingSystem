@@ -36,8 +36,8 @@ const resultDiv = document.getElementById("result");
 function onScanSuccess(decodedText) {
     console.log("QR Data:", decodedText);
 
-    // Example QR content: VOTER:user@email.com
-    fetch("http://10.188.132.208:5000/api/voter/scan", {
+    // Send scanned QR to backend
+    fetch("http://localhost:5000/api/voter/scan", {  // Use your backend URL
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ qrData: decodedText })
@@ -49,11 +49,15 @@ function onScanSuccess(decodedText) {
             resultDiv.innerText = data.error;
         } else {
             resultDiv.style.color = "green";
-            resultDiv.innerText = "Valid voter ✔ Redirecting to vote page...";
+            resultDiv.innerText = "Valid voter ✔ Redirecting to Voting Page...";
 
-            // Redirect to voting page
+            // Save voter info to localStorage
+            localStorage.setItem("name", data.name);
+            localStorage.setItem("qr", data.qr);
+
+            // Redirect to JSP voting page
             setTimeout(() => {
-                window.location.href = "vote.html";
+                window.location.href = "VotingPage.jsp"; // Correct JSP page
             }, 2000);
         }
     })

@@ -1,17 +1,55 @@
 const db = require("../config/db");
 
-exports.vote = (req, res) => {
-    const email = req.user.email;
-    const { candidateId } = req.body;
+// QR Scan validation
+exports.scanQR = async (req, res) => {
+    try {
+        const { qrData } = req.body;
+        if (!qrData || !qrData.includes(":"))
+            return res.status(400).json({ error: "Invalid QR format" });
 
-    db.query("SELECT * FROM Users WHERE email=?", [email], (e, u) => {
-        if (u[0].has_voted) return res.status(400).json({ message: "Already voted" });
+        const email = qrData.split(":")[1];
 
-        db.query("UPDATE Candidates SET votes_count=votes_count+1 WHERE id=?", [candidateId]);
-        db.query("UPDATE Users SET has_voted=TRUE WHERE email=?", [email]);
-        db.query("INSERT INTO Votes(user_email,candidate_id) VALUES(?,?)",
-            [email, candidateId]);
+        const [rows] = await db.query(
+            "SELECT id, name, qr_code, has_voted FROM Users WHERE email=?",
+            [email]
+        );
 
-        res.json({ message: "Vote cast successfully" });
-    });
+        if (rows.length === 0) return res.status(404).json({ error: "Invalid QR Code" });
+        if (rows[0].has_voted) return res.status(403).json({ error: "Already voted" });
+
+        res.json({
+            success: true,
+            voterId: rows[0].id,
+            name: rows[0].name,
+            qr: rows[0].qr_code
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Server error" });
+    }
+};
+
+// Submit vote
+exports.vote = async (req, res) => {
+    try {
+        const { voterId, candidateId } = req.body;
+
+        if (!voterId || !candidateId)
+            return res.status(400).json({ error: "Voter ID and Candidate ID are required" });
+
+        const [voterRows] = await db.query("SELECT has_voted FROM Users WHERE id=?", [voterId]);
+        if (voterRows.length === 0) return res.status(404).json({ error: "Voter not found" });
+        if (voterRows[0].has_voted) return res.status(400).json({ error: "Already voted" });
+
+        await db.query("UPDATE Candidates SET votes_count = votes_count + 1 WHERE id=?", [candidateId]);
+        await db.query("UPDATE Users SET has_voted = TRUE WHERE id=?", [voterId]);
+        await db.query("INSERT INTO Votes(voter_id, candidate_id) VALUES (?, ?)", [voterId, candidateId]);
+
+        res.json({ success: true, message: "Vote cast successfully" });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Server error" });
+    }
 };

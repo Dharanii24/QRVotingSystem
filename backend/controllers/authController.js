@@ -1,63 +1,80 @@
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const User = require("../models/User");
-const generateQR = require("../utils/generateQR");
 
+
+const db = require("../config/db");
+const { generateVoterQR } = require("../utils/qrGenerator");
+const path = require("path");
+const bcrypt = require("bcrypt"); // optional if you hash passwords
 exports.register = async (req, res) => {
+    const { name, email, password } = req.body;
+
     try {
-        const { name, email, password } = req.body;
+        // 1️⃣ Save user in DB
+        await db.query(
+            "INSERT INTO Users(name, email, password, has_voted) VALUES (?, ?, ?, ?)",
+            [name, email, password, false]
+        );
 
-        if (!name || !email || !password) {
-            return res.status(400).json({ message: "All fields required" });
-        }
+        // 2️⃣ Generate QR code
+        const qrPath = await generateVoterQR(email);
 
-        const existing = await User.findByEmail(email);
-        if (existing.length > 0) {
-            return res.status(400).json({ message: "User already exists" });
-        }
+        // 3️⃣ Save QR path in DB
+        await db.query("UPDATE Users SET qr_code=? WHERE email=?", [qrPath, email]);
 
-        const hash = await bcrypt.hash(password, 10);
-        const qr = await generateQR(`VOTER:${email}`);
-
-        await User.create(name, email, hash, qr);
-
-        res.json({ message: "Registered successfully" });
+        // 4️⃣ Return success + QR path
+        res.json({
+            success: true,
+            message: "Registration successful!",
+            qrPath: qrPath // for frontend download
+        });
 
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: "Server error" });
+        res.status(500).json({ error: "Server error during registration" });
     }
 };
+
 
 exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        const users = await User.findByEmail(email);
-        if (users.length === 0) {
-            return res.status(404).json({ message: "User not found" });
+        if (!email || !password) {
+            return res.status(400).json({ error: "Email and password are required" });
         }
 
-        const user = users[0];
-        const ok = await bcrypt.compare(password, user.password);
-        if (!ok) {
-            return res.status(401).json({ message: "Wrong password" });
-        }
-
-        const token = jwt.sign(
-            { id: user.id, email: user.email },
-            process.env.JWT_SECRET,
-            { expiresIn: "1h" }
+        // Query user by email
+        const [rows] = await db.query(
+            "SELECT id, name, email, password, qr_code, has_voted FROM Users WHERE email = ?",
+            [email]
         );
 
+        if (rows.length === 0) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        const user = rows[0];
+
+        // Check password
+        // If you use plain text (not recommended):
+        if (password !== user.password) {
+            return res.status(401).json({ error: "Incorrect password" });
+        }
+
+        // If you use bcrypt hashed passwords:
+        // const match = await bcrypt.compare(password, user.password);
+        // if (!match) return res.status(401).json({ error: "Incorrect password" });
+
+        // Return QR path and user info
         res.json({
-            token,
+            success: true,
+            message: "Login successful",
             name: user.name,
-            qr: user.qr_code
+            voterId: user.id,
+            qrPath: "/uploads/" + user.qr_code
         });
 
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Server error" });
+        console.error("Login Error:", err);
+        res.status(500).json({ error: "Server error during login" });
     }
 };

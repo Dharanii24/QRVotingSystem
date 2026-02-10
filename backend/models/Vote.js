@@ -32,7 +32,7 @@ class Vote {
   }
 
   static async getVoteByVoter(voter_id) {
-    const sql = `SELECT v.*, c.full_name as candidate_name, c.position 
+    const sql = `SELECT v.*, c.name as candidate_name, c.position 
                  FROM votes v 
                  JOIN candidates c ON v.candidate_id = c.candidate_id 
                  WHERE v.voter_id = ?`;
@@ -45,9 +45,9 @@ class Vote {
       SELECT 
         v.vote_id,
         v.voter_id,
-        u.full_name as voter_name,
+        u.name as voter_name,
         v.candidate_id,
-        c.full_name as candidate_name,
+        c.name as candidate_name,
         c.position,
         v.qr_verified,
         v.voted_at,
