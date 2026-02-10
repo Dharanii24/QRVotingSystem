@@ -1,3 +1,96 @@
+
+<head><style>
+    body {
+        font-family: Arial, Helvetica, sans-serif;
+        background: linear-gradient(135deg, #4e73df, #1cc88a);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0;
+    }
+
+    form {
+        background: #ffffff;
+        padding: 25px 30px;
+        border-radius: 10px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        width: 320px;
+        text-align: center;
+    }
+
+    form input {
+        width: 100%;
+        padding: 10px;
+        margin: 8px 0;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+
+    form input:focus {
+        outline: none;
+        border-color: #4e73df;
+        box-shadow: 0 0 4px rgba(78, 115, 223, 0.5);
+    }
+
+    form button {
+        width: 100%;
+        padding: 10px;
+        background: #4e73df;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-size: 15px;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+
+    form button:hover {
+        background: #2e59d9;
+    }
+
+    #qrDisplay {
+        background: #ffffff;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        margin-left: 20px;
+    }
+
+    #qrDisplay h3 {
+        margin-bottom: 10px;
+        color: #333;
+    }
+
+    #qrImg {
+        margin: 10px 0;
+        border: 4px solid #4e73df;
+        border-radius: 8px;
+    }
+
+    #downloadQR {
+        display: inline-block;
+        margin-top: 10px;
+        text-decoration: none;
+        background: #1cc88a;
+        color: #fff;
+        padding: 8px 15px;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+
+    #downloadQR:hover {
+        background: #17a673;
+    }
+
+    #redirectMsg {
+        font-size: 14px;
+        font-weight: bold;
+    }
+</style>
+</head>
 <form id="loginForm">
     <input type="email" name="email" placeholder="Email" required>
     <input type="password" name="password" placeholder="Password" required>

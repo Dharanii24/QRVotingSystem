@@ -1,5 +1,3 @@
-
-
 const db = require("../config/db");
 const { generateVoterQR } = require("../utils/qrGenerator");
 const path = require("path");

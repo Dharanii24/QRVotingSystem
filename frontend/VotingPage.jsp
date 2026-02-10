@@ -5,14 +5,111 @@
 <head>
     <title>Voting Page</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
-    <style>
-        body { font-family: Arial; text-align: center; padding: 20px; }
-        #candidateButtons button { margin: 5px; padding: 10px; cursor: pointer; color: black; font-size:16px; }
-        .selected { background-color: #c8e6c9; }
-        .disabled { background-color: #eee; cursor: not-allowed; }
-        #message { margin-top: 15px; font-weight: bold; }
-        #reader { width: 300px; margin: auto; }
-        #candidateSection { display: none; }
+    
+       <style>
+    body {
+        font-family: Arial, Helvetica, sans-serif;
+        background: linear-gradient(135deg, #f8f9fc, #e3e6f0);
+        text-align: center;
+        padding: 20px;
+        margin: 0;
+    }
+
+    h2, h3 {
+        color: #2e59d9;
+    }
+
+    #welcome {
+        margin-bottom: 10px;
+    }
+
+    #scanMsg {
+        font-size: 15px;
+        color: #555;
+        margin-bottom: 15px;
+    }
+
+    #reader {
+        width: 320px;
+        margin: 15px auto;
+        padding: 10px;
+        background: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+    }
+
+    #qrImg {
+        margin-top: 10px;
+        border: 4px solid #4e73df;
+        border-radius: 10px;
+    }
+
+    #candidateSection {
+        margin-top: 25px;
+        padding: 20px;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.15);
+        display: none;
+    }
+
+    #candidateButtons {
+        margin-top: 15px;
+    }
+
+    #candidateButtons button {
+        margin: 8px;
+        padding: 12px 18px;
+        cursor: pointer;
+        font-size: 15px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        background: #f8f9fc;
+        transition: 0.2s;
+    }
+
+    #candidateButtons button:hover {
+        background: #e2e6ea;
+    }
+
+    .selected {
+        background-color: #1cc88a !important;
+        color: white;
+        border-color: #1cc88a;
+    }
+
+    .disabled {
+        background-color: #eee;
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    #submitVote {
+        margin-top: 20px;
+        padding: 12px 25px;
+        font-size: 16px;
+        background: #4e73df;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    #submitVote:disabled {
+        background: #b7b9cc;
+        cursor: not-allowed;
+    }
+
+    #submitVote:hover:not(:disabled) {
+        background: #2e59d9;
+    }
+
+    #message {
+        margin-top: 18px;
+        font-weight: bold;
+        font-size: 15px;
+    }
+
     </style>
 </head>
 <body>
@@ -89,27 +186,27 @@ async function loadCandidates() {
         const container = document.getElementById("candidateButtons");
         container.innerHTML = "";
 
-        candidates.forEach(c => {
-            console.log("Candidate object:", c); // DEBUG
-            if (!c.name) return;
+        candidates.forEach(function(c) {
+            console.log("Candidate:", c);
 
             const btn = document.createElement("button");
-            btn.innerText = `${c.name} (${c.party})`;
+            btn.innerText = c.name + " (" + c.party + ")"; // ✅ FIX
+            btn.className = "candidate-btn";
             btn.dataset.id = c.id;
-            btn.classList.add("candidate-btn");
 
-            btn.addEventListener("click", () => {
+            btn.onclick = function () {
                 selectedCandidateId = c.id;
-                document.querySelectorAll(".candidate-btn").forEach(b => b.classList.remove("selected"));
+                document.querySelectorAll(".candidate-btn")
+                    .forEach(b => b.classList.remove("selected"));
                 btn.classList.add("selected");
                 document.getElementById("submitVote").disabled = false;
-            });
+            };
 
             container.appendChild(btn);
         });
+
     } catch (err) {
         console.error(err);
-        messageEl.style.color = "red";
         messageEl.innerText = "Failed to load candidates";
     }
 }

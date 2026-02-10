@@ -1,115 +1,236 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
+<%
+if(session.getAttribute("admin")==null){
+    response.sendRedirect("adminLogin.jsp");
+}
+%>
+
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Admin Dashboard - QR Voting</title>
-    <style>
-        body { font-family: Arial; padding: 20px; }
-        h2 { text-align: center; }
-        #candidatesTable { width: 60%; margin: 20px auto; border-collapse: collapse; }
-        #candidatesTable th, #candidatesTable td { border: 1px solid #ccc; padding: 10px; text-align: center; }
-        #candidatesTable th { background-color: #f0f0f0; }
-        #addCandidateForm { width: 50%; margin: 20px auto; text-align: center; }
-        #addCandidateForm input { padding: 8px; margin: 5px; }
-        #message { text-align: center; font-weight: bold; }
-    </style>
+<title>Admin Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{
+    margin:0;
+    font-family:Segoe UI, Arial;
+    background:#f1f5f9;
+}
+.header{
+    background:#0f172a;
+    color:white;
+    padding:15px 30px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+.logout{
+    background:#ef4444;
+    border:none;
+    color:white;
+    padding:8px 16px;
+    cursor:pointer;
+}
+.container{
+    padding:30px;
+    text-align:center;
+}
+button{
+    padding:8px 14px;
+    margin:4px;
+    border:none;
+    cursor:pointer;
+}
+.start{background:#22c55e;color:white;}
+.stop{background:#f97316;color:white;}
+.add{background:#3b82f6;color:white;}
+.delete{background:#dc2626;color:white;}
+input{
+    padding:8px;
+    margin:5px;
+    width:180px;
+}
+table{
+    width:80%;
+    margin:auto;
+    background:white;
+    border-collapse:collapse;
+}
+th{
+    background:#1e293b;
+    color:white;
+    padding:10px;
+}
+td{
+    padding:10px;
+    border-bottom:1px solid #e5e7eb;
+}
+#winner{
+    font-size:18px;
+    font-weight:bold;
+    margin-top:10px;
+    color:#16a34a;
+}
+canvas{
+    margin-top:30px;
+}
+</style>
 </head>
+
 <body>
 
-<h2>Admin Dashboard - QR Voting System</h2>
-
-<!-- Candidate Table -->
-<table id="candidatesTable">
-    <thead>
-        <tr>
-            <th>Candidate Name</th>
-            <th>Party</th>
-            <th>Votes</th>
-        </tr>
-    </thead>
-    <tbody id="candidatesBody">
-        <!-- Candidates will be loaded here dynamically -->
-    </tbody>
-</table>
-
-<!-- Add Candidate Form -->
-<div id="addCandidateForm">
-    <h3>Add New Candidate</h3>
-    <input type="text" id="candidateName" placeholder="Candidate Name" />
-    <input type="text" id="candidateParty" placeholder="Party" />
-    <button id="addCandidateBtn">Add Candidate</button>
+<div class="header">
+    <h2>Admin Dashboard</h2>
+    <button class="logout" onclick="logout()">Logout</button>
 </div>
 
-<p id="message"></p>
+<div class="container">
+
+<button class="start" onclick="setStatus('OPEN')">Start Election</button>
+<button class="stop" onclick="setStatus('CLOSED')">Stop Election</button>
+
+<hr>
+
+<h3>Add Candidate</h3>
+<input id="cname" placeholder="Candidate Name">
+<input id="cparty" placeholder="Party Name">
+<button class="add" onclick="addCandidate()">Add</button>
+
+<hr>
+
+<h3>Live Results</h3>
+<table>
+<thead>
+<tr>
+<th>Rank</th>
+<th>Name</th>
+<th>Party</th>
+<th>Votes</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody id="body"></tbody>
+</table>
+
+<br>
+<button class="start" onclick="declareWinner()">Declare Winner</button>
+<p id="winner"></p>
+
+<canvas id="chart" width="700"></canvas>
+
+</div>
 
 <script>
-const candidatesBody = document.getElementById("candidatesBody");
-const message = document.getElementById("message");
+var body = document.getElementById("body");
+var winner = document.getElementById("winner");
+var chart = null;
 
-// Fetch candidates and update table
-async function loadCandidates() {
-    try {
-        const res = await fetch("http://localhost:5000/api/admin/candidates");
-        const data = await res.json();
+/* LOAD DATA */
+function loadData(){
+fetch("http://localhost:5000/api/admin/rank-results")
+.then(function(res){ return res.json(); })
+.then(function(data){
 
-        candidatesBody.innerHTML = ""; // clear table
-        data.forEach(c => {
-            const row = document.createElement("tr");
-            row.innerHTML = `
-                <td>${c.name}</td>
-                <td>${c.party}</td>
-                <td>${c.votes_count}</td>
-            `;
-            candidatesBody.appendChild(row);
-        });
-    } catch (err) {
-        console.error(err);
-        message.style.color = "red";
-        message.innerText = "Failed to load candidates";
+    body.innerHTML = "";
+
+    var names = [];
+    var votes = [];
+
+    for(var i=0;i<data.length;i++){
+
+        var c = data[i];
+        var name  = c.name;
+        var party = c.party;
+        var vote  = c.votes_count;
+
+        body.innerHTML +=
+            "<tr>" +
+            "<td>"+(i+1)+"</td>" +
+            "<td>"+name+"</td>" +
+            "<td>"+party+"</td>" +
+            "<td>"+vote+"</td>" +
+            "<td><button class='delete' onclick='removeCandidate("+c.id+")'>Delete</button></td>" +
+            "</tr>";
+
+        names.push(name);
+        votes.push(vote);
     }
+
+    if(chart) chart.destroy();
+
+    chart = new Chart(document.getElementById("chart"),{
+        type:"bar",
+        data:{
+            labels:names,
+            datasets:[{
+                label:"Votes",
+                data:votes
+            }]
+        }
+    });
+});
 }
 
-// Add new candidate
-document.getElementById("addCandidateBtn").addEventListener("click", async () => {
-    const name = document.getElementById("candidateName").value.trim();
-    const party = document.getElementById("candidateParty").value.trim();
-
-    if (!name || !party) {
-        alert("Please enter both name and party");
-        return;
-    }
-
-    try {
-        const res = await fetch("http://localhost:5000/api/admin/add-candidate", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, party })
-        });
-
-        const data = await res.json();
-        if (data.success) {
-            message.style.color = "green";
-            message.innerText = data.message;
-            document.getElementById("candidateName").value = "";
-            document.getElementById("candidateParty").value = "";
-            loadCandidates(); // refresh table
-        } else {
-            message.style.color = "red";
-            message.innerText = data.error;
-        }
-    } catch (err) {
-        console.error(err);
-        message.style.color = "red";
-        message.innerText = "Server error";
-    }
+/* ADD CANDIDATE */
+function addCandidate(){
+fetch("http://localhost:5000/api/admin/add-candidate",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+        name:cname.value,
+        party:cparty.value
+    })
+}).then(function(){
+    cname.value="";
+    cparty.value="";
+    loadData();
 });
+}
 
-// Auto-refresh candidates every 5 seconds to simulate live results
-setInterval(loadCandidates, 5000);
+/* DELETE CANDIDATE */
+function removeCandidate(id){
+if(!confirm("Remove this candidate?")) return;
 
-// Initial load
-loadCandidates();
+fetch("http://localhost:5000/api/admin/remove-candidate",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({ id:id })
+}).then(function(){
+    loadData();
+});
+}
+
+/* ELECTION STATUS */
+function setStatus(status){
+fetch("http://localhost:5000/api/admin/election-status",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({ status:status })
+}).then(function(){
+    alert("Election " + status);
+});
+}
+
+/* DECLARE WINNER */
+function declareWinner(){
+fetch("http://localhost:5000/api/admin/declare-winner")
+.then(function(res){ return res.json(); })
+.then(function(d){
+    winner.innerHTML =
+        "🏆 Winner: " + d.name +
+        " (" + d.party + ") - Votes: " + d.votes;
+});
+}
+
+/* LOGOUT */
+function logout(){
+    window.location.replace("adminLogin.jsp");
+}
+
+/* AUTO REFRESH */
+setInterval(loadData,5000);
+loadData();
 </script>
 
 </body>
